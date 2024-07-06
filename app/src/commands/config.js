@@ -7,6 +7,7 @@ const client = new Discord.Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildModeration
   ]}
 )
 
