@@ -3,6 +3,15 @@ const client = require('../config')
 const path = require('path')
 const { GuildMember, ChannelType } = require('discord.js')
 
+const { joinVoiceChannel, createAudioPlayer, createAudioResource, getVoiceConnection, VoiceConnectionStatus, AudioPlayerStatus } = require('@discordjs/voice');
+const musicModule = require('./musicModule')
+
+const { generateDependencyReport } = require('@discordjs/voice');
+
+console.log(generateDependencyReport());
+
+
+
 const prefixesFilePath = path.join(__dirname, '../../prefixes.json')
 let guildPrefixes = {}
 
@@ -33,6 +42,8 @@ client.on("messageCreate", async(message)=>{
   
   const args = message.content.slice(prefix.length).trim().split(/ +/)
   const command = args.shift().toLowerCase()
+
+  console.log(command)
 
   // Send the command list 
   if(command === 'help'){
@@ -229,4 +240,51 @@ client.on("messageCreate", async(message)=>{
   }
 
   // Channels commands
+  if(command === 'join'){
+    const voiceChannel = message.member.voice.channel
+
+    if(!voiceChannel){
+      return message.reply("Musisz być na kanale głosowym, aby bot mógł działać")
+    }
+    try {
+      const connection = joinVoiceChannel({
+        channelId: voiceChannel.id,
+        guildId: voiceChannel.guild.id,
+        adapterCreator: voiceChannel.guild.voiceAdapterCreator
+      })
+
+      const player = createAudioPlayer();
+      connection.subscribe(player);   
+    } catch(error){
+      console.error(error)
+    }
+  }
+  if(command === 'leave'){
+    const voiceChannel = getVoiceConnection(message.guild.id)
+
+    if(voiceChannel){
+      voiceChannel.destroy()
+    }
+  
+  }
+  const serverQueue = musicModule.queue ? musicModule.queue.get(message.guild.id) : null;
+
+  if(command === 'play') {
+    musicModule.execute(message, serverQueue);
+    return;
+} else if(command === 'skip') {
+    if (serverQueue) {
+        musicModule.skip(message, serverQueue);
+    } else {
+        message.channel.send('There is no song playing to skip.');
+    }
+    return;
+} else if(command === 'stop') {
+    if (serverQueue) {
+        musicModule.stop(message, serverQueue);
+    } else {
+        message.channel.send('There is no song playing to stop.');
+    }
+    return;
+}
 })

@@ -2,6 +2,7 @@ const client = require('./src/commands/config');
 const { token } = require('./src/config.json');
 
 
+
 console.log("Starting...");
 console.log("Finding a token...")
 
